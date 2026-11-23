@@ -1,0 +1,28 @@
+# Entorno virtual
+.venv/
+venv/
+__pycache__/
+
+# Seguimiento local de MLflow (cada integrante tiene el suyo)
+mlflow.db
+mlruns/
+mlartifacts/
+
+# Salidas del pipeline (las describe dvc.lock)
+data/huella.json
+data/fuera_distribucion.csv
+resultados/
+
+# El CSV nunca entra al repositorio
+*.csv
+!data/fuera_distribucion_plantilla.csv
+
+# Pruebas y sistema
+.pytest_cache/
+.DS_Store
+
+# Credenciales locales (nunca al repositorio)
+.env
+
+# Modelo exportado para construir la imagen (src/exportar_modelo.py)
+modelo/

@@ -1,0 +1,3 @@
+# Herramientas de desarrollo y pruebas (no las necesita el servicio).
+-r requirements.txt
+pytest==8.4.2

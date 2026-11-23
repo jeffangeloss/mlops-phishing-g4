@@ -1,0 +1,16 @@
+# Dependencias del kit, con versiones fijadas para que todas las máquinas del
+# equipo entrenen con el mismo entorno (Python 3.11).
+# Si cambias una versión, cambia también el entorno registrado en MLflow,
+# y las corridas dejan de ser comparables con las anteriores.
+pandas==2.3.3
+numpy==2.4.6
+# scikit-learn 1.6 o superior rompe Pipeline.predict con catboost 1.2.8
+# (CatBoostClassifier no implementa __sklearn_tags__); por eso se fija la 1.5.2.
+scikit-learn==1.5.2
+catboost==1.2.8
+mlflow==3.16.1
+dvc==3.67.1
+fastapi==0.141.1
+uvicorn==0.54.0
+httpx==0.28.1
+pyyaml==6.0.3
