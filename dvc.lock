@@ -1,0 +1,123 @@
+schema: '2.0'
+stages:
+  datos:
+    cmd: python src/datos.py
+    deps:
+    - path: contrato_datos.yaml
+      hash: md5
+      md5: d39ab6a5ccf051870501cdcb08df8df9
+      size: 2073
+    - path: data/raw/PhiUSIIL_Phishing_URL_Dataset.csv
+      hash: md5
+      md5: 769ba530b3629c4c2f9896abf642aefa
+      size: 56854345
+    - path: data/raw/legitimas_con_ruta.csv
+      hash: md5
+      md5: 4d09b793da48f2c1ad2526f383dd4c54
+      size: 2641946
+    - path: fuentes_ood.yaml
+      hash: md5
+      md5: 10d942de331faf91172c14d7acb5c0ed
+      size: 1959
+    - path: src/comun.py
+      hash: md5
+      md5: 3113fbe70352157f9389d352bb95ebe9
+      size: 12757
+    - path: src/datos.py
+      hash: md5
+      md5: 753b4a5dba8dcb7459622baa4800e0c1
+      size: 8803
+    params:
+      params.yaml:
+        datos.csv: data/raw/PhiUSIIL_Phishing_URL_Dataset.csv
+        datos.legitimas_con_ruta: data/raw/legitimas_con_ruta.csv
+        datos.version: 3
+    outs:
+    - path: data/huella.json
+      hash: md5
+      md5: 9a1514e4d60834e780851bfc8808278a
+      size: 2084
+  entrenar:
+    cmd: python src/entrenar.py
+    deps:
+    - path: contrato_datos.yaml
+      hash: md5
+      md5: d39ab6a5ccf051870501cdcb08df8df9
+      size: 2073
+    - path: data/huella.json
+      hash: md5
+      md5: 9a1514e4d60834e780851bfc8808278a
+      size: 2084
+    - path: requirements.txt
+      hash: md5
+      md5: c19ed316153c00cf01809bb63ac90cdd
+      size: 575
+    - path: src/comun.py
+      hash: md5
+      md5: 3113fbe70352157f9389d352bb95ebe9
+      size: 12757
+    - path: src/entrenar.py
+      hash: md5
+      md5: 24b4d3310198eeef64157f7cd67e7965
+      size: 14316
+    - path: src/extractor.py
+      hash: md5
+      md5: b6438ee3938d169f8e5afc74450c9516
+      size: 6851
+    - path: src/modelo.py
+      hash: md5
+      md5: 3746e14f1b232f08b22ec879d72a683f
+      size: 5507
+    params:
+      params.yaml:
+        compuertas.recall_phishing_min: 0.98
+        extractor:
+          prob_tld_desconocido: 0.0
+        modelo:
+          nombre_registro: clasificador-url-phishing
+          semilla: 42
+          verbose: 0
+        particion:
+          prueba: 0.2
+          semilla: 42
+          estratificada: true
+        umbral:
+          criterio: tope_bloqueo_validacion
+          tope_bloqueo: 0.05
+          validacion: 0.1
+          minimo: 0.05
+          maximo: 0.95
+          paso: 0.01
+    outs:
+    - path: resultados/entrenamiento.json
+      hash: md5
+      md5: 3ff6572b5a28553c5494fec7aa213690
+      size: 324
+  compuertas:
+    cmd: python src/compuertas.py evaluar
+    deps:
+    - path: data/fuera_distribucion.csv
+      hash: md5
+      md5: 5897bf60a4b2811c83c98029342c0084
+      size: 48429
+    - path: resultados/entrenamiento.json
+      hash: md5
+      md5: 3ff6572b5a28553c5494fec7aa213690
+      size: 324
+    - path: src/compuertas.py
+      hash: md5
+      md5: f8148efdb09242264d6cb7463fd4fa40
+      size: 14943
+    params:
+      params.yaml:
+        compuertas:
+          recall_phishing_min: 0.98
+          legitimas_bloqueadas_max: 0.3
+          exigir_g4: true
+          tolerancia_vs_vigente: 0.0
+        datos.fuera_distribucion: data/fuera_distribucion.csv
+    outs:
+    - path: resultados/compuertas.json
+      hash: md5
+      md5: 83b52d7d2fc379955c485d6c699073e9
+      size: 1000

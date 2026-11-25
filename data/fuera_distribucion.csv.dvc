@@ -1,0 +1,5 @@
+outs:
+- md5: 5897bf60a4b2811c83c98029342c0084
+  size: 48429
+  hash: md5
+  path: fuera_distribucion.csv

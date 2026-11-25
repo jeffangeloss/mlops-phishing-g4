@@ -1,0 +1,56 @@
+# Pipeline de la prueba de concepto como un DAG de tres etapas:
+#   datos (G1) -> entrenar -> compuertas (G3, G4, G5)
+# `dvc repro` corre solo las etapas cuyas dependencias cambiaron;
+# `dvc repro --force` las corre todas (lo usa src/corridas.py).
+# dvc.lock guarda la huella md5 de cada dependencia y salida de la última corrida.
+
+stages:
+  datos:
+    cmd: python src/datos.py
+    deps:
+      - src/datos.py
+      - src/comun.py
+      - contrato_datos.yaml
+      - ${datos.csv}          # el CSV versionado con DVC (data/raw/*.dvc)
+      - ${datos.legitimas_con_ruta}   # versión 2: URL legítimas con ruta (data/raw/*.dvc)
+      - fuentes_ood.yaml      # G1 comprueba que la versión 2 no use dominios de G4
+    params:
+      - datos.csv
+      - datos.version
+      - datos.legitimas_con_ruta
+    outs:
+      - data/huella.json:
+          cache: false
+
+  entrenar:
+    cmd: python src/entrenar.py
+    deps:
+      - src/entrenar.py
+      - src/extractor.py
+      - src/modelo.py
+      - src/comun.py
+      - contrato_datos.yaml
+      - data/huella.json
+      - requirements.txt
+    params:
+      - extractor
+      - particion
+      - umbral
+      - compuertas.recall_phishing_min
+      - modelo
+    metrics:
+      - resultados/entrenamiento.json:
+          cache: false
+
+  compuertas:
+    cmd: python src/compuertas.py evaluar
+    deps:
+      - src/compuertas.py
+      - resultados/entrenamiento.json
+      - ${datos.fuera_distribucion}   # conjunto de G4, versionado con DVC
+    params:
+      - compuertas
+      - datos.fuera_distribucion
+    outs:
+      - resultados/compuertas.json:
+          cache: false
