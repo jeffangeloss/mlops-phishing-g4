@@ -6,7 +6,7 @@ carpeta tiene Git y DVC inicializados, usa `dvc repro --force`; si no, llama a l
 mismos tres comandos directamente.
 
 Al final escribe resultados/resumen_corridas.csv con una fila por corrida:
-  - si repite las métricas de la corrida 1 (y sus predicciones, bit a bit),
+  - si repite las métricas y la huella de probabilidades redondeadas de la corrida 1,
   - si su versión tiene linaje completo y qué le falta,
   - el recall de phishing y la decisión de la compuerta G3,
   - la duración desde la lectura del CSV hasta el registro (y la del ajuste y la del pipeline entero).
