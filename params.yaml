@@ -1,0 +1,69 @@
+# Parámetros de la prueba de concepto (alternativa B del informe, sección 4.7).
+# DVC lee este archivo: si cambias un valor, `dvc repro` vuelve a correr solo
+# las etapas que dependen de él.
+
+datos:
+  # CSV de PhiUSIIL versionado con DVC (data/raw/*.dvc). Git guarda solo su
+  # referencia; el archivo se obtiene con `dvc pull` desde el remoto de DVC.
+  csv: data/raw/PhiUSIIL_Phishing_URL_Dataset.csv
+  # Versión 2 del dataset: URL legítimas con ruta de dominios legítimos de entrenamiento
+  # (src/construir_legitimas.py), versionadas con DVC. Se agregan solo a la partición de
+  # entrenamiento; la de prueba sigue siendo la de PhiUSIIL. Con null se entrena la versión 1.
+  version: 3                     # v3: más dominios en legitimas_con_ruta.csv
+  legitimas_con_ruta: data/raw/legitimas_con_ruta.csv
+  # Conjunto fuera de distribución de la compuerta G4: URL legítimas con ruta tomadas de
+  # sitemaps públicos (src/construir_ood.py), versionado con DVC.
+  fuera_distribucion: data/fuera_distribucion.csv
+
+extractor:
+  # Valor de TLDLegitimateProb para un TLD que no aparece en la partición de entrenamiento.
+  # Es el mismo que el conjunto asigna a los dominios con IP, que no tienen TLD conocido.
+  prob_tld_desconocido: 0.0
+
+particion:
+  prueba: 0.2        # 80 % entrenamiento y 20 % prueba
+  semilla: 42        # misma semilla que la reproducción del capítulo 3
+  estratificada: true
+
+modelo:
+  nombre_registro: clasificador-url-phishing   # nombre en el registro de modelos de MLflow
+  semilla: 42        # random_state de CatBoostClassifier
+  verbose: 0
+
+umbral:
+  # Umbral de decisión sobre la probabilidad de phishing, elegido con una partición de
+  # validación tomada del entrenamiento (nunca de la prueba).
+  # Perfil equilibrado, decidido por el equipo el 21-11-2026 (ver docs/bitacora.md): el
+  # umbral más bajo que bloquea como máximo el 5 % de las URL legítimas con ruta en
+  # validación. El otro criterio disponible, piso_recall, elige el umbral que cumple el piso
+  # de recall de G3 con el menor bloqueo (perfil de máxima detección).
+  criterio: tope_bloqueo_validacion
+  tope_bloqueo: 0.05
+  validacion: 0.1
+  minimo: 0.05
+  maximo: 0.95
+  paso: 0.01
+
+compuertas:
+  # Metas revisadas por el equipo el 21-11-2026 tras la evaluación corregida (perfil
+  # equilibrado). La Exposición 01 proponía 0,99 y 2 %, que no se pueden cumplir a la vez
+  # con las 20 características léxicas (ver docs/bitacora.md).
+  recall_phishing_min: 0.98        # G3, antes 0,99
+  legitimas_bloqueadas_max: 0.30   # G4, antes 0,02; tolerancia provisional que debe bajar con más datos
+  # G4 solo se evalúa si existe data/fuera_distribucion.csv. Con true, una G4
+  # "no evaluada" también bloquea la promoción; desde que el conjunto existe, se exige.
+  exigir_g4: true
+  tolerancia_vs_vigente: 0.0       # G5: la candidata no puede tener menos recall que la vigente
+
+deriva:
+  caracteristicas: [URLLength, NoOfSubDomain]
+  intervalos: 10      # deciles fijados con la partición de entrenamiento
+  psi_revision: 0.1   # desde 0,1 se pide revisión del ingeniero de ML
+  psi_alerta: 0.25    # desde 0,25 se alerta a la guardia
+
+mlflow:
+  # Seguimiento y registro locales: una base SQLite (mlflow.db) y los
+  # artefactos en ./mlruns, ambos dentro de esta carpeta.
+  base: mlflow.db
+  artefactos: mlruns
+  experimento: mlops-phishing
